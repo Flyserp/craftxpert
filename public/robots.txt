@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /moderator-*
+Disallow: /vendor-*
+Disallow: /customer-*
+Disallow: /wallet
+Disallow: /chat
+Disallow: /notifications
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://taskhive.app/sitemap.xml

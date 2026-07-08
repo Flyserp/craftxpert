@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>WrapServices Documentation v2.1.3 — WRAPCODERS</title>
+<meta name="description" content="Official documentation for WrapServices v2.1.3 — installation, Supabase backend, roles, PWA, deployment, and changelog." />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo-dot"></span>
+    <div>
+      <h1>WrapServices Docs</h1>
+      <p class="version">Version 2.1.3 · by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></p>
+    </div>
+  </div>
+  <input id="search" type="search" placeholder="Search documentation..." aria-label="Search" />
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Sections">
+    <nav>
+      <a href="#introduction" class="active">1. Introduction</a>
+      <a href="#installation">2. Installation Guide</a>
+      <a href="#environment">3. Environment Setup (.env)</a>
+      <a href="#supabase">4. Supabase Integration</a>
+      <a href="#auth">5. Authentication System</a>
+      <a href="#roles">6. Role-Based Access</a>
+      <a href="#pwa">7. PWA System</a>
+      <a href="#wizard">8. Setup Wizard</a>
+      <a href="#navigation">9. Navigation System</a>
+      <a href="#demo">10. Demo / Test Mode</a>
+      <a href="#deployment">11. Deployment Guide</a>
+      <a href="#troubleshooting">12. Troubleshooting</a>
+      <a href="#faq">13. FAQ</a>
+      <a href="#changelog">14. Changelog</a>
+    </nav>
+    <p class="credit">Crafted by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></p>
+  </aside>
+
+  <main class="content">
+    <section id="introduction">
+      <h2>1. Introduction</h2>
+      <p><strong>WrapServices</strong> is a production-ready, multi-role service marketplace platform built with React 18, Vite, TypeScript, Tailwind CSS, and a managed Supabase (Lovable Cloud) backend. It supports four user roles — Customer, Service Provider, Employer, and Admin — with end-to-end flows for bookings, job posting, applications, payments, reviews, messaging, and verification.</p>
+      <ul>
+        <li>Fully responsive PWA with installable mobile experience</li>
+        <li>Role-based dashboards and protected routes</li>
+        <li>Realtime messaging, notifications, and live updates</li>
+        <li>Provider subscriptions, sponsored services, and pay-per-job posting</li>
+        <li>Admin suite: users, verifications, payments, jobs, analytics, CMS, banners, coupons</li>
+      </ul>
+    </section>
+
+    <section id="installation">
+      <h2>2. Installation Guide</h2>
+      <ol>
+        <li>Clone the repository or remix the Lovable project.</li>
+        <li>Install dependencies: <code>npm install</code> (or <code>bun install</code>).</li>
+        <li>Copy <code>.env.example</code> to <code>.env</code> and fill in Supabase keys (see §3).</li>
+        <li>Run the dev server: <code>npm run dev</code>.</li>
+        <li>Open <code>http://localhost:8080</code>.</li>
+      </ol>
+      <p class="note">Requires Node 18+ and a Supabase project (or use Lovable Cloud — included by default).</p>
+    </section>
+
+    <section id="environment">
+      <h2>3. Environment Setup (.env)</h2>
+      <p>Three public variables are required at build time:</p>
+<pre><code>VITE_SUPABASE_URL="https://&lt;project-ref&gt;.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="&lt;anon key&gt;"
+VITE_SUPABASE_PROJECT_ID="&lt;project-ref&gt;"</code></pre>
+      <p>Server-side secrets (edge functions only) — set via the Lovable secrets manager:</p>
+      <ul>
+        <li><code>SUPABASE_SERVICE_ROLE_KEY</code> — admin operations</li>
+        <li><code>LOVABLE_API_KEY</code> — AI gateway (smart matching, descriptions)</li>
+        <li><code>DEMO_RESET_SECRET</code> — gated demo data reset endpoint</li>
+      </ul>
+    </section>
+
+    <section id="supabase">
+      <h2>4. Supabase Integration Guide</h2>
+      <p>The client is pre-wired at <code>src/integrations/supabase/client.ts</code>. Schema is managed through versioned migrations under <code>supabase/migrations/</code>.</p>
+      <h3>Core tables (57 total)</h3>
+      <ul>
+        <li><strong>Identity:</strong> profiles, user_roles, provider_staff, employer_profiles</li>
+        <li><strong>Marketplace:</strong> vendor_services, tasks, task_proposals, bookings, reviews</li>
+        <li><strong>Money:</strong> wallets, wallet_transactions, payment_transactions, invoices, withdrawals, refund_requests, category_commissions</li>
+        <li><strong>Engagement:</strong> conversations, messages, notifications, favorites, saved_jobs</li>
+        <li><strong>CMS / Admin:</strong> cms_pages, homepage_content, banners, advertisements, platform_settings, promo_coupons, email_templates</li>
+        <li><strong>Trust &amp; Safety:</strong> vendor_verifications, disputes, content_reports, admin_audit_log</li>
+      </ul>
+      <h3>Storage buckets</h3>
+      <ul>
+        <li><strong>Public:</strong> avatars, branding, tenant-logos, portfolio, task-photos, review-photos, chat-attachments</li>
+        <li><strong>Private:</strong> verification-docs, receipts, demo-gallery</li>
+      </ul>
+      <h3>Edge functions</h3>
+      <p>Deployed: <code>seed-demo-users</code>, <code>reset-demo-data</code>, <code>send-booking-email</code>, <code>generate-booking-receipt</code>, <code>generate-task-description</code>, <code>smart-match-vendor</code>, <code>invite-staff</code>, <code>resend-staff-invitation</code>, <code>validate-coupon</code>, <code>geocode-search</code>, <code>review-reminder</code>, <code>send-push</code>, <code>dispatch-notification-channels</code>.</p>
+    </section>
+
+    <section id="auth">
+      <h2>5. Authentication System</h2>
+      <p>Email/password authentication powered by Supabase Auth with optional Google OAuth. Sessions persist via <code>localStorage</code> with auto-refresh.</p>
+      <ul>
+        <li>Sign up → <code>handle_new_user()</code> trigger creates a profile + assigns role from <code>user_metadata.role</code>.</li>
+        <li>Sign in → <code>log_login_event()</code> writes to <code>admin_audit_log</code>.</li>
+        <li>Soft-delete via <code>profiles.deleted_at</code> blocks sign-in and signs the user out.</li>
+        <li>Profile completion gate (<code>/complete-profile</code>) for first-time users.</li>
+      </ul>
+    </section>
+
+    <section id="roles">
+      <h2>6. Role-Based Access System</h2>
+      <p>Roles live in a separate <code>user_roles</code> table (never on profiles) and are checked via the <code>has_role(uuid, app_role)</code> security-definer function.</p>
+      <table>
+        <thead><tr><th>Role</th><th>Dashboard</th><th>Capabilities</th></tr></thead>
+        <tbody>
+          <tr><td>client (customer)</td><td>/client-dashboard</td><td>Browse services, book, post tasks, leave reviews</td></tr>
+          <tr><td>provider</td><td>/provider-dashboard</td><td>List services, apply to jobs, manage bookings, sponsor listings</td></tr>
+          <tr><td>provider_staff</td><td>/staff-dashboard</td><td>Operate on behalf of a provider (treated as provider for UI gating)</td></tr>
+          <tr><td>employer</td><td>/employer-dashboard</td><td>Post jobs, review applicants, hire providers</td></tr>
+          <tr><td>admin</td><td>/admin</td><td>Full platform access — users, payments, moderation, settings</td></tr>
+        </tbody>
+      </table>
+      <p>Frontend gates: <code>&lt;ProtectedRoute requiredRole&gt;</code>, <code>&lt;Can&gt;</code>, and the <code>usePermission()</code> hook.</p>
+    </section>
+
+    <section id="pwa">
+      <h2>7. PWA System</h2>
+      <ul>
+        <li>Service worker via <code>vite-plugin-pwa</code> with Workbox precaching and background sync.</li>
+        <li>Push notifications through <code>public/push-sw.js</code> + <code>send-push</code> edge function.</li>
+        <li>Per-tenant branding (light/dark/PWA logo, theme color, manifest) injected at runtime from <code>platform_settings</code> via <code>usePwaBranding()</code>.</li>
+        <li>Install prompt managed by <code>usePwaInstall()</code> with iOS guidance fallback.</li>
+      </ul>
+    </section>
+
+    <section id="wizard">
+      <h2>8. Setup Wizard System</h2>
+      <p>New users complete onboarding via <code>OnboardingWizard.tsx</code>:</p>
+      <ol>
+        <li>Choose role and basic identity</li>
+        <li>Complete profile (display name, phone, address, bio, avatar)</li>
+        <li>Role-specific extras (business name + categories for providers, company for employers)</li>
+        <li>Optional: take the interactive product tour</li>
+      </ol>
+      <p>Admins configure platform-wide defaults at <code>/admin/platform-settings</code> (branding, logos, theme, email).</p>
+    </section>
+
+    <section id="navigation">
+      <h2>9. Navigation System (Responsive)</h2>
+      <ul>
+        <li><strong>Desktop (≥1024px):</strong> <code>UnifiedHeader</code> + sticky <code>ProfileRail</code> sidebar on dashboards.</li>
+        <li><strong>Tablet (768–1023px):</strong> Collapsible sidebar with icon-only mode.</li>
+        <li><strong>Mobile (&lt;768px):</strong> Hamburger drawer; bottom nav pills removed in v2.1 for a cleaner surface.</li>
+        <li>Header z-index: <code>60</code> (above portaled dropdowns at <code>50</code>) to keep sticky header visible.</li>
+        <li>Container width: main content capped at <code>max-w-5xl</code> for readability.</li>
+      </ul>
+    </section>
+
+    <section id="demo">
+      <h2>10. Demo / Test Mode System</h2>
+      <p>Demo accounts are seeded via the <code>seed-demo-users</code> edge function. Credentials are listed on <code>/demo-login</code>.</p>
+      <ul>
+        <li>Admin, Provider, Customer, Employer, and Staff demo logins</li>
+        <li>Mock services, bookings, reviews, conversations, and notifications</li>
+        <li>Auto-reset every 6 hours via <code>reset-demo-data</code> (gated by <code>DEMO_RESET_SECRET</code>)</li>
+      </ul>
+    </section>
+
+    <section id="deployment">
+      <h2>11. Deployment Guide</h2>
+      <ol>
+        <li>Click <strong>Publish</strong> in Lovable (top-right) to deploy the frontend to <code>*.lovable.app</code>.</li>
+        <li>Backend changes (migrations, edge functions) deploy automatically when approved in chat.</li>
+        <li>Connect a custom domain under <strong>Project Settings → Domains</strong>.</li>
+        <li>Run <code>npm run build</code> to produce a static <code>dist/</code> if self-hosting.</li>
+        <li>Self-host: any static host (Vercel, Netlify, Cloudflare Pages) — set the three <code>VITE_*</code> env vars.</li>
+      </ol>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>12. Troubleshooting</h2>
+      <dl>
+        <dt>"Permission denied for table" from PostgREST</dt>
+        <dd>The table is missing a <code>GRANT</code>. Every public-schema table needs explicit grants to <code>authenticated</code> / <code>service_role</code>.</dd>
+        <dt>Realtime channel never fires</dt>
+        <dd>Register all <code>.on()</code> handlers <em>before</em> <code>.subscribe()</code>, and use a unique channel id.</dd>
+        <dt>Sticky header hides when a dropdown opens</dt>
+        <dd>Fixed in v2.1.0 — Radix scroll-lock is neutralized in <code>index.css</code> and header is <code>z-[60]</code>.</dd>
+        <dt>"Unsupported provider" on Google login</dt>
+        <dd>Enable Google provider in the Lovable Cloud auth settings.</dd>
+      </dl>
+    </section>
+
+    <section id="faq">
+      <h2>13. FAQ</h2>
+      <dl>
+        <dt>Can I rebrand the platform?</dt>
+        <dd>Yes — every color, logo, and copy block is editable. Per-tenant branding overrides primary/accent at runtime.</dd>
+        <dt>Does it support multi-tenancy?</dt>
+        <dd>Path-based multi-tenancy is included with RLS-isolated data per tenant.</dd>
+        <dt>What payment providers are supported?</dt>
+        <dd>Stripe and PayPal scaffolding with 25% deposit logic and commission tracking.</dd>
+        <dt>Is the source code editable?</dt>
+        <dd>Yes — full TypeScript source ships in the repo.</dd>
+      </dl>
+    </section>
+
+    <section id="changelog">
+      <h2>14. Changelog</h2>
+
+      <article class="release">
+        <header><h3>Version 2.1.3</h3><span class="date">June 30, 2026</span></header>
+        <h4>Added</h4>
+        <ul>
+          <li>WRAPCODERS branding across documentation and footer credits</li>
+          <li>Refreshed SaaS-grade documentation portal (14 sections, sidebar nav, search)</li>
+          <li>Per-tenant branding overrides for primary/accent colors with HSL injection</li>
+          <li>Standardized <code>LandingCTAButton</code> and shared UI library (<code>AppTable</code>, <code>LoadingState</code>, <code>EmptyState</code>)</li>
+          <li>Sponsored Services module with admin promotion tools and ranking weights</li>
+          <li>Featured providers, category commission settings, and coupon system</li>
+          <li>Homepage section ordering (drag-and-drop), CMS pages, banners, advertisements</li>
+          <li>Interactive onboarding tours and Demo Gallery (<code>/demos</code>)</li>
+          <li>Mobile-ready API contracts under <code>src/lib/api/</code></li>
+        </ul>
+        <h4>Changed</h4>
+        <ul>
+          <li>Border radius token <code>sm</code> resolves to 0.5rem (8px) for unified buttons/chips</li>
+          <li>Button typography forced to 13px; sidebar items 14px; group labels 11px uppercase</li>
+          <li>Main content container capped at <code>max-w-5xl</code></li>
+          <li>Footer newsletter restyled with editorial split layout and subtle lime wash</li>
+          <li>Profile dropdown consolidated into a single menu in the sidebar footer</li>
+        </ul>
+        <h4>Fixed</h4>
+        <ul>
+          <li>Supabase Realtime channel leaks in <code>useHomepageContent</code></li>
+          <li>Sticky header hidden by Radix scroll-lock when dropdowns opened (z-index + body style override)</li>
+          <li>Tabs dark-mode contrast and 13px typography</li>
+          <li>Table cell wrapping (<code>whitespace-nowrap</code>) and pagination spacing</li>
+          <li>Demo sign-in button text color forced to white</li>
+        </ul>
+        <h4>Backend</h4>
+        <ul>
+          <li>Schema synced — 57 tables, RLS enabled on all, security-definer <code>has_role()</code> in place</li>
+          <li>Admin audit log triggers for payments, bookings, jobs, verifications, disputes, sponsorships</li>
+          <li>pg_cron automation: <code>expire_overdue_tasks</code>, <code>expire_sponsored_services</code>, <code>expire_featured_services</code></li>
+          <li>Storage buckets verified (10 buckets, correct public/private split)</li>
+        </ul>
+      </article>
+
+      <article class="release">
+        <header><h3>Version 2.0.0</h3><span class="date">Initial public release</span></header>
+        <ul>
+          <li>Four roles, full marketplace, payments, messaging, reviews, admin suite</li>
+          <li>PWA install, push notifications, multi-tenancy, SEO sitemap</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="docs-footer">
+      <p>© 2026 WrapServices Documentation · Crafted by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></p>
+    </footer>
+  </main>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>

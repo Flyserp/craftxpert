@@ -1,0 +1,37 @@
+{
+  "$comment": "Per-target bundle-size baselines. Update with `node scripts/check-bundle-size.mjs --target=<name> --update`.",
+  "production": {
+    "tolerance": 0.03,
+    "sizes": {
+      "js": {
+        "raw": 2514417,
+        "gz": 781174
+      },
+      "css": {
+        "raw": 162718,
+        "gz": 28985
+      },
+      "total": {
+        "raw": 2677135,
+        "gz": 810159
+      }
+    }
+  },
+  "development": {
+    "tolerance": 0.05,
+    "sizes": {
+      "js": {
+        "raw": 2514417,
+        "gz": 781174
+      },
+      "css": {
+        "raw": 162718,
+        "gz": 28985
+      },
+      "total": {
+        "raw": 2677135,
+        "gz": 810159
+      }
+    }
+  }
+}

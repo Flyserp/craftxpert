@@ -1,0 +1,16 @@
+{
+  "$comment": "Allowlist for the forbidden-pattern scanner in scripts/check-bundle-size.mjs. Use sparingly — these patterns exist to prevent the accent-toggle from being re-introduced.",
+  "ignoreFiles": [
+    "scripts/check-bundle-size.mjs",
+    "bundle-size.scan.config.json",
+    "docs/**",
+    "**/*.md",
+    "**/CHANGELOG*",
+    "src/pages/admin/BundleSizePage.tsx",
+    "public/bundle-size-history.json"
+  ],
+  "ignoreLinePatterns": [
+    "lovable-ignore-accent-scan",
+    "@allow-accent-reference"
+  ]
+}

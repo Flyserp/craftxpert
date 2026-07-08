@@ -1,0 +1,82 @@
+{
+  "entries": [
+    {
+      "id": "baseline",
+      "ref": "main",
+      "pr": null,
+      "commit": "baseline",
+      "message": "Initial baseline after accent-toggle removal",
+      "timestamp": "2026-04-20T12:00:00Z",
+      "sizes": {
+        "js": { "raw": 2451200, "gz": 758400 },
+        "css": { "raw": 162900, "gz": 28910 },
+        "total": { "raw": 2614100, "gz": 787310 }
+      }
+    },
+    {
+      "id": "pr-101",
+      "ref": "feat/lazy-charts",
+      "pr": 101,
+      "commit": "a1b2c3d",
+      "message": "Lazy-load recharts in dashboards",
+      "timestamp": "2026-04-21T09:30:00Z",
+      "sizes": {
+        "js": { "raw": 2438100, "gz": 754200 },
+        "css": { "raw": 162600, "gz": 28860 },
+        "total": { "raw": 2600700, "gz": 783060 }
+      }
+    },
+    {
+      "id": "pr-104",
+      "ref": "fix/notification-bell",
+      "pr": 104,
+      "commit": "d4e5f6a",
+      "message": "Fix notification bell icon flash",
+      "timestamp": "2026-04-22T14:10:00Z",
+      "sizes": {
+        "js": { "raw": 2440500, "gz": 755100 },
+        "css": { "raw": 162700, "gz": 28870 },
+        "total": { "raw": 2603200, "gz": 783970 }
+      }
+    },
+    {
+      "id": "pr-108",
+      "ref": "feat/map-clustering",
+      "pr": 108,
+      "commit": "9f8e7d6",
+      "message": "Add Leaflet marker clustering to browse map",
+      "timestamp": "2026-04-23T11:45:00Z",
+      "sizes": {
+        "js": { "raw": 2532800, "gz": 781600 },
+        "css": { "raw": 163100, "gz": 28940 },
+        "total": { "raw": 2695900, "gz": 810540 }
+      }
+    },
+    {
+      "id": "pr-110",
+      "ref": "perf/split-admin",
+      "pr": 110,
+      "commit": "112233a",
+      "message": "Split admin bundle from client entry",
+      "timestamp": "2026-04-24T16:20:00Z",
+      "sizes": {
+        "js": { "raw": 2452300, "gz": 757800 },
+        "css": { "raw": 162500, "gz": 28850 },
+        "total": { "raw": 2614800, "gz": 786650 }
+      }
+    },
+    {
+      "id": "pr-112",
+      "ref": "chore/remove-accent-toggle",
+      "pr": 112,
+      "commit": "abcdef0",
+      "message": "Remove accent-toggle remnants and prune CSS",
+      "timestamp": "2026-04-25T10:05:00Z",
+      "sizes": {
+        "js": { "raw": 2446142, "gz": 756025 },
+        "css": { "raw": 162451, "gz": 28843 },
+        "total": { "raw": 2608593, "gz": 784868 }
+      }
+    }
+  ]
+}
