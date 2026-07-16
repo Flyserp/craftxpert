@@ -1,0 +1,840 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+ * Global focus-ring suppression
+ * ------------------------------------------------------------------
+ * Mouse/touch focus never shows an outline or ring. Keyboard focus
+ * (`:focus-visible`) is preserved for accessibility. Any new component
+ * inherits this automatically — no need to add `focus:outline-none`
+ * + `focus:ring-0` boilerplate ever again.
+ * ------------------------------------------------------------------ */
+@layer base {
+  *:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+    --tw-ring-offset-shadow: 0 0 #0000 !important;
+    border-color: inherit;
+  }
+}
+
+/* ------------------------------------------------------------------
+ * Neutralize Radix `data-scroll-locked` body lock for non-modal popovers
+ * ------------------------------------------------------------------
+ * Radix sets `data-scroll-locked` + `overflow:hidden` + `pointer-events:none`
+ * on <body> when a DropdownMenu opens, even with `modal={false}`. That
+ * collapses the scroll context and breaks `position: sticky` on the header.
+ * Re-enable scrolling and pointer events so sticky elements stay anchored.
+ * ------------------------------------------------------------------ */
+html body[data-scroll-locked] {
+  overflow: visible !important;
+  margin-right: 0 !important;
+  pointer-events: auto !important;
+  padding-right: 0 !important;
+}
+
+
+
+@layer base {
+  :root {
+    /* Refreshed palette — HSL values converted from the requested hex set.
+       Tokens are consumed via `hsl(var(--token))` throughout the app, so
+       values must stay in space-separated HSL form (not hex). */
+    --background: 0 0% 96%;
+    --foreground: 0 0% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    --primary: 187 100% 9%;        /* #00292E deep teal */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 0 0% 96%;
+    /* Bumped from 44% → 38% so muted text clears WCAG AA (≥4.5:1)
+       on both --background (#f5f5f5) and --card (#fff). */
+    --muted-foreground: 0 0% 38%;
+
+    /* Lime accent: slightly darkened (51% → 46%) so accent text on light
+       surfaces (e.g. `text-accent` over --background) clears AA. The pair
+       with --accent-foreground (deep teal) on the accent bg stays ~9:1. */
+    --accent: 75 70% 40%;            /* lime accent */
+    --accent-foreground: 187 100% 9%;/* deep teal for AA contrast on lime */
+
+    /* Slightly darker red improves both: white text on destructive bg
+       (now ~5.5:1) and destructive text on light surfaces (now ~5.4:1). */
+    --destructive: 355 85% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: var(--primary);          /* focus ring follows primary color */
+
+    /* Chart palette — data-viz tuned, distinct hues, AA on light surfaces */
+    --chart-1: 207 100% 41%;         /* #0073d2 */
+    --chart-2: 43 100% 40%;          /* #cd9200 */
+    --chart-3: 195 72% 23%;          /* #104e64 */
+    --chart-4: 45 100% 49%;          /* #fcbb00 */
+    --chart-5: 38 100% 49%;          /* #f99c00 */
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 28%;
+    --header-background: 0 0% 100%;
+    --sidebar-primary: 207 100% 41%;      /* #0073d2 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--hover-bg);
+    --sidebar-accent-foreground: var(--hover-text);
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 207 100% 41%;
+
+    /* Hover tokens — centralized */
+    --hover-bg: 0 0% 95%;
+    --hover-text: 187 100% 9%;
+
+    /* Custom tokens */
+    --surface-warm: 0 0% 96%;
+    --text-heading: 0 0% 9%;
+    --text-body: 0 0% 38%;            /* matches --muted-foreground (AA) */
+    --success: 119 35% 28%;
+    --warning: 32 95% 35%;
+    --info: 210 80% 38%;
+
+    --card-shadow: none;
+    --card-shadow-hover: none;
+
+    --footer: 156 14% 8%;
+    --footer-foreground: 0 0% 100%;
+    --footer-muted: 220 9% 65%;
+    --footer-subtle: 220 9% 46%;
+    --footer-border: 0 0% 100%;
+    /* Footer link hover — lime accent pops against the dark footer bg in
+       both light and dark themes (footer is always dark). */
+    --footer-link-hover: 75 70% 40%;
+
+
+
+
+    /* Site name wordmark color — deep teal in light, lime in dark. */
+    --site-name: 187 100% 9%;
+
+    /* ============================================================
+       Typography tokens — single source of truth
+       Consume via `var(--fs-*)`, `var(--fw-*)`, `var(--lh-*)`,
+       `var(--ls-*)` in CSS, or via Tailwind utilities
+       `text-fs-*`, `font-*`, `leading-*`, `tracking-*` which are
+       wired to these tokens in tailwind.config.ts.
+       ============================================================ */
+
+    /* Font family */
+    --font-sans: 'Inter', 'Geist', system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Fluid font-size scale (clamp: mobile → desktop) */
+    --fs-xs:   clamp(0.75rem,   0.1vw + 0.7rem,  0.8125rem);   /* 12→13 */
+    --fs-sm:   clamp(0.8125rem, 0.15vw + 0.78rem, 0.875rem);   /* 13→14 */
+    --fs-base: 0.875rem;
+    --fs-md:   clamp(1rem,      0.3vw + 0.9rem,   1.125rem);   /* 16→18 */
+    --fs-lg:   clamp(1.125rem,  1.6vw,            1.25rem);    /* 18→20 */
+    --fs-xl:   clamp(1.25rem,   1vw + 0.9rem,     1.5rem);     /* 20→24 */
+    --fs-2xl:  clamp(1.375rem,  1.4vw + 0.9rem,   1.75rem);    /* 22→28 */
+    --fs-3xl:  clamp(1.625rem,  3vw + 0.75rem,    2.75rem);    /* 26→44 */
+    --fs-4xl:  clamp(2rem,      4.5vw + 1rem,     3.75rem);    /* 32→60 */
+    --fs-5xl:  clamp(2.25rem,   5.5vw + 1rem,     4.5rem);     /* 36→72 */
+    --fs-6xl:  clamp(2.5rem,    7vw   + 1rem,     5.5rem);     /* 40→88 */
+
+    /* Font weight scale */
+    --fw-regular: 400;
+    --fw-medium:  500;
+    --fw-semibold: 600;
+    --fw-bold:    700;
+    --fw-extrabold: 800;
+
+    /* Line-height scale */
+    --lh-none:    1;
+    --lh-tight:   1.15;
+    --lh-snug:    1.3;
+    --lh-normal:  1.5;
+    --lh-relaxed: 1.65;
+    --lh-loose:   1.8;
+
+    /* Letter-spacing scale */
+    --ls-tighter: -0.025em;
+
+    /* ============================================================
+       Text measure tokens — max line-length for readability + overflow
+       guards. Consumed by the .measure-* / .truncate-* utilities below.
+       ============================================================ */
+    --measure-xs:  20ch;
+    --measure-sm:  36ch;
+    --measure-md:  52ch;   /* default body width inside cards */
+    --measure-lg:  68ch;   /* lead paragraphs */
+    --measure-xl:  80ch;   /* long-form article width */
+    --ls-tight:   -0.015em;
+    --ls-normal:  0;
+    --ls-wide:    0.01em;
+    --ls-wider:   0.08em;
+    --ls-widest:  0.16em;
+
+    /* ============================================================
+       Spacing scale — single source of truth (multiples of 4px).
+       Consume via Tailwind utilities (`p-space-md`, `gap-space-lg`)
+       or directly in CSS via `var(--space-*)`.
+       ============================================================ */
+    --space-0:  0;
+    --space-xs: 0.25rem;   /* 4  */
+    --space-sm: 0.5rem;    /* 8  */
+    --space-md: 0.75rem;   /* 12 */
+    --space-lg: 1rem;      /* 16 */
+    --space-xl: 1.5rem;    /* 24 */
+    --space-2xl:2rem;      /* 32 */
+    --space-3xl:3rem;      /* 48 */
+    --space-4xl:4rem;      /* 64 */
+
+    /* Radius tokens (mirror tailwind borderRadius) */
+    --radius-sm: 0.75rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1.5rem;
+    --radius-3xl: 2rem;
+    --radius-full: 9999px;
+
+    /* Shadow tokens — opt-in, brand-tinted */
+    --shadow-xs: 0 1px 2px 0 hsl(var(--primary) / 0.04);
+    --shadow-sm: 0 1px 3px 0 hsl(var(--primary) / 0.06), 0 1px 2px -1px hsl(var(--primary) / 0.05);
+    --shadow-md: 0 4px 8px -2px hsl(var(--primary) / 0.08), 0 2px 4px -2px hsl(var(--primary) / 0.05);
+    --shadow-lg: 0 12px 24px -6px hsl(var(--primary) / 0.12), 0 4px 8px -4px hsl(var(--primary) / 0.06);
+    --shadow-xl: 0 24px 48px -12px hsl(var(--primary) / 0.18);
+
+    /* Icon size tokens (line-height neutral, square) */
+    --icon-xs: 0.875rem;   /* 14 */
+    --icon-sm: 1rem;       /* 16 */
+    --icon-md: 1.25rem;    /* 20 */
+    --icon-lg: 1.5rem;     /* 24 */
+    --icon-xl: 2rem;       /* 32 */
+    --icon-2xl: 2.5rem;    /* 40 */
+
+    /* Motion tokens — durations + easings */
+    --duration-instant: 75ms;
+    --duration-fast:    150ms;
+    --duration-normal:  200ms;
+    --duration-slow:    300ms;
+    --duration-slower:  500ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+    --ease-decelerate: cubic-bezier(0, 0, 0.2, 1);
+
+    /* Overlay (modals / sheets / lightbox) */
+    --overlay: 0 0% 0%;
+    --overlay-opacity: 0.6;
+    --on-dark: 0 0% 100%;   /* readable text/icon over dark surfaces */
+  }
+
+  .dark {
+      --background: 150 12% 8%;
+      --foreground: 46 8% 90%;
+
+      --card: 150 10% 11%;
+      --card-foreground: 46 8% 90%;
+
+      --popover: 150 10% 11%;
+      --popover-foreground: 46 8% 90%;
+
+      /* In dark mode, primary/accent must be LIGHT to remain readable on dark bg.
+         We flip primary to a bright lime (matches the brand accent) and keep its
+         contrast partner dark. */
+      --primary: 75 70% 40%;
+      --primary-foreground: 186 100% 9%;
+
+      --secondary: 150 10% 16%;
+      --secondary-foreground: 46 8% 92%;
+
+      --muted: 150 8% 15%;
+      --muted-foreground: 120 6% 70%;
+
+      --accent: 75 70% 40%;
+      --accent-foreground: 186 100% 9%;
+
+      --site-name: 0 0% 100%;
+
+      --destructive: 0 75% 62%;
+      --destructive-foreground: 0 0% 100%;
+
+      --border: 150 6% 28%;
+      --input: 150 6% 28%;
+      --ring: var(--primary);
+
+      /* Chart palette — brightened for legibility on dark surfaces while
+         keeping the same hues as the light theme. */
+      --chart-1: 207 95% 62%;   /* blue */
+      --chart-2: 43 90% 60%;    /* amber */
+      --chart-3: 195 60% 55%;   /* teal */
+      --chart-4: 45 95% 62%;    /* yellow */
+      --chart-5: 38 95% 62%;    /* orange */
+
+      --sidebar-background: 150 10% 11%;
+      --sidebar-foreground: 46 8% 80%;
+      --header-background: 150 10% 11%;
+      --sidebar-primary: 75 70% 40%;
+      --sidebar-primary-foreground: 186 100% 9%;
+      --sidebar-accent: var(--hover-bg);
+      --sidebar-accent-foreground: var(--hover-text);
+      --sidebar-border: 150 6% 28%;
+      --sidebar-ring: 75 70% 40%;
+
+      /* Hover tokens — dark mode (inverted for readability on dark bg) */
+      --hover-bg: 150 10% 16%;
+      --hover-text: 75 70% 40%;
+
+      --surface-warm: 150 8% 10%;
+      --text-heading: 46 8% 94%;
+      --text-body: 46 6% 75%;
+      --success: 119 35% 60%;
+      --warning: 38 80% 60%;
+      --info: 210 70% 65%;
+
+      --card-shadow: none;
+      --card-shadow-hover: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    /* Defensive: prevent rogue wide elements from causing page-wide
+       horizontal scroll on mobile. `overflow-x: clip` preserves
+       position:sticky (overflow:hidden would break it). */
+    overflow-x: clip;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "kern", "liga", "calt", "ss01";
+    font-synthesis: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* ─── Global WCAG 2.4.7 focus-visible system ───
+     Single source of truth for keyboard focus across the app. Every
+     interactive element — native or ARIA — gets a 2px ring in the
+     `--ring` token with a 2px offset (3:1 contrast against background,
+     AA-compliant). shadcn primitives already ship focus-visible:ring,
+     which layers cleanly on top; mouse clicks stay unaffected because
+     we only match `:focus-visible`. */
+  a:focus-visible,
+  button:focus-visible,
+  summary:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [role="menuitem"]:focus-visible,
+  [role="menuitemcheckbox"]:focus-visible,
+  [role="menuitemradio"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="option"]:focus-visible,
+  [role="switch"]:focus-visible,
+  [role="checkbox"]:focus-visible,
+  [role="radio"]:focus-visible,
+  [role="combobox"]:focus-visible,
+  [contenteditable="true"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Form controls: keep the ring flush against the field border so it
+     doesn't clip inside dense forms, and drop the extra radius override
+     so the field's own radius wins. */
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  input[type="checkbox"]:focus-visible,
+  input[type="radio"]:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+
+  /* Never let a stylesheet ship `outline: none` without a replacement. */
+  :focus-visible {
+    outline-color: hsl(var(--ring));
+  }
+
+  /* Centralized typography — single source of truth.
+     - Headings/titles: every h1–h6 + `.text-heading`
+     - Body: every <p> + `.text-body`
+     Override size per-instance with Tailwind only when needed. */
+  h1, h2, h3, h4, h5, h6,
+  .text-heading {
+    color: hsl(var(--text-heading));
+    font-family: var(--font-sans);
+    font-weight: var(--fw-bold);
+    letter-spacing: var(--ls-tight);
+    line-height: var(--lh-tight);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Modular type scale (1.25 ratio) — tuned for fluid, readable sizing
+     across mobile → desktop. Uses CSS clamp() with viewport-relative
+     middle term so sizes scale smoothly between min (mobile) and max
+     (desktop) without abrupt jumps at breakpoints. */
+  h1 { font-size: var(--fs-2xl); font-weight: var(--fw-bold);      line-height: var(--lh-tight); letter-spacing: var(--ls-tight); }
+  h2 { font-size: var(--fs-xl);  font-weight: var(--fw-semibold);  line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); }
+  h3 { font-size: var(--fs-lg);  font-weight: var(--fw-semibold);  line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); }
+  h4 { font-size: var(--fs-md);  font-weight: var(--fw-semibold);  line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+  h5 { font-size: var(--fs-sm);  font-weight: var(--fw-semibold);  line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+  h6 { font-size: var(--fs-xs);  font-weight: var(--fw-semibold);  line-height: var(--lh-normal); letter-spacing: var(--ls-wide);  text-transform: none; }
+
+  /* Default vertical rhythm — prevents cramped stacks of headings/paragraphs.
+     Use `.no-prose-spacing` or Tailwind `m-0` to opt out when needed. */
+  h1 { margin-block: 0 0.6em; }
+  h2 { margin-block: 1.2em 0.5em; }
+  h3 { margin-block: 1em 0.4em; }
+  h4 { margin-block: 0.9em 0.35em; }
+  h5, h6 { margin-block: 0.75em 0.3em; }
+  h1:first-child, h2:first-child, h3:first-child,
+  h4:first-child, h5:first-child, h6:first-child { margin-top: 0; }
+  /* Mobile tuning (≤640px): looser leading + softer tracking on large
+     headings so they don't feel cramped or visually collide; tighter
+     margins to reclaim vertical space on small screens. */
+  @media (max-width: 640px) {
+    h1 { line-height: var(--lh-snug);   letter-spacing: var(--ls-tight);  margin-block: 0 0.5em; }
+    h2 { line-height: var(--lh-snug);   letter-spacing: var(--ls-tight);  margin-block: 1em 0.4em; }
+    h3 { line-height: var(--lh-normal); letter-spacing: var(--ls-normal); margin-block: 0.85em 0.35em; }
+    h4, h5, h6 { line-height: var(--lh-normal); letter-spacing: var(--ls-normal); margin-block: 0.7em 0.3em; }
+    p, .text-body, .text-description { line-height: var(--lh-normal); }
+  }
+
+  /* Desktop polish (≥1024px): tighter leading on display headings to
+     keep large type compact and editorial; slightly opened body leading
+     for long-form readability. */
+  @media (min-width: 1024px) {
+    h1 { line-height: 1.05; letter-spacing: -0.03em; }
+    h2 { line-height: 1.1;  letter-spacing: -0.02em; }
+    p, .text-body, .text-description { line-height: var(--lh-relaxed); }
+  }
+
+
+  /* Centralized paragraph/description typography — single source of truth.
+     Applied to every <p> and any element with `.text-body` / `.text-description`.
+     Override per-instance with Tailwind utilities only when truly needed. */
+  p,
+  .text-body,
+  .text-description {
+    color: hsl(var(--text-body));
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-relaxed);
+    letter-spacing: var(--ls-normal);
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+
+  /* Compact descriptions (cards, captions, helper text) */
+  .text-description-sm {
+    color: hsl(var(--text-body));
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-normal);
+    letter-spacing: var(--ls-wide);
+    text-wrap: pretty;
+    overflow-wrap: break-word;
+  }
+
+  /* Lead paragraphs (hero subtitles, section intros) */
+  .text-lead {
+    color: hsl(var(--text-body));
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-normal);
+    letter-spacing: var(--ls-tight);
+    text-wrap: pretty;
+  }
+
+  /* Eyebrow labels (small uppercase tags above section headings) */
+  .text-eyebrow {
+    color: hsl(var(--primary));
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-semibold);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--ls-widest);
+    text-transform: uppercase;
+    font-family: var(--font-sans);
+  }
+
+  /* ============================================================
+     Heading utility classes — apply heading typography to ANY
+     element (div, span, a, p) without changing semantics. New
+     pages drop in `.h1`–`.h6` / `.lead` / `.body` and inherit
+     the central responsive scale automatically.
+     ============================================================ */
+  .h1, .h2, .h3, .h4, .h5, .h6 {
+    color: hsl(var(--text-heading));
+    font-family: var(--font-sans);
+    letter-spacing: var(--ls-tight);
+    line-height: var(--lh-tight);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+  .h1 { font-size: var(--fs-2xl); font-weight: var(--fw-bold);      line-height: var(--lh-tight); letter-spacing: var(--ls-tight); }
+  .h2 { font-size: var(--fs-xl);  font-weight: var(--fw-semibold);  line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); }
+  .h3 { font-size: var(--fs-lg);  font-weight: var(--fw-semibold);  line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); }
+  .h4 { font-size: var(--fs-md);  font-weight: var(--fw-semibold);  line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+  .h5 { font-size: var(--fs-sm);  font-weight: var(--fw-semibold);  line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+  .h6 { font-size: var(--fs-xs);  font-weight: var(--fw-semibold);  line-height: var(--lh-normal); letter-spacing: var(--ls-wide); }
+
+  /* Alias utilities so new pages can pick the semantic name they need
+     without re-declaring the underlying tokens. `.lead` mirrors
+     `.text-lead`, `.body` mirrors `<p>`, `.eyebrow` mirrors
+     `.text-eyebrow`. */
+  .lead    { @apply text-lead; }
+  .body    { @apply text-body; }
+  .eyebrow { @apply text-eyebrow; }
+
+  /* ============================================================
+     Guideline typography aliases — map the design-pack vocabulary
+     (display/h1/h2/h3/title/subtitle/body-lg/caption/small) onto
+     the existing token scale so feature code can use either name.
+     Purely additive — no visual change to existing pages.
+     ============================================================ */
+  .text-display  { font-size: var(--fs-4xl); font-weight: var(--fw-bold);     line-height: var(--lh-tight); letter-spacing: var(--ls-tight); color: hsl(var(--text-heading)); }
+  .text-h1       { font-size: var(--fs-3xl); font-weight: var(--fw-bold);     line-height: var(--lh-tight); letter-spacing: var(--ls-tight); color: hsl(var(--text-heading)); }
+  .text-h2       { font-size: var(--fs-2xl); font-weight: var(--fw-bold);     line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); color: hsl(var(--text-heading)); }
+  .text-h3       { font-size: var(--fs-xl);  font-weight: var(--fw-semibold); line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); color: hsl(var(--text-heading)); }
+  .text-title    { font-size: var(--fs-lg);  font-weight: var(--fw-semibold); line-height: var(--lh-snug);  letter-spacing: var(--ls-tight); color: hsl(var(--text-heading)); }
+  .text-subtitle { font-size: var(--fs-md);  font-weight: var(--fw-medium);   line-height: var(--lh-snug);  letter-spacing: var(--ls-normal); color: hsl(var(--text-heading)); }
+  .text-body-lg  { font-size: var(--fs-md);  font-weight: var(--fw-regular);  line-height: var(--lh-relaxed); color: hsl(var(--text-body)); }
+  .text-caption  { font-size: var(--fs-xs);  font-weight: var(--fw-regular);  line-height: var(--lh-snug);  letter-spacing: var(--ls-wide);  color: hsl(var(--muted-foreground)); }
+  .text-small    { font-size: var(--fs-xs);  font-weight: var(--fw-medium);   line-height: var(--lh-snug);  letter-spacing: var(--ls-normal); color: hsl(var(--muted-foreground)); }
+
+  /* Mobile parity for utility headings (matches element overrides above) */
+  @media (max-width: 640px) {
+    .h1 { line-height: var(--lh-snug);   letter-spacing: var(--ls-tight); }
+    .h2 { line-height: var(--lh-snug);   letter-spacing: var(--ls-tight); }
+    .h3 { line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+    .h4, .h5, .h6 { line-height: var(--lh-normal); letter-spacing: var(--ls-normal); }
+  }
+  @media (min-width: 1024px) {
+    .h1 { line-height: 1.05; letter-spacing: -0.03em; }
+    .h2 { line-height: 1.1;  letter-spacing: -0.02em; }
+  }
+
+  /* ============================================================
+     Reusable typography utility classes — built on the same
+     `--fs-* / --fw-* / --lh-*` tokens so dashboards, vendor cards,
+     and tables stay aligned with the central scale.
+     ============================================================ */
+
+  /* Stat numbers (KPI tiles, dashboard totals) */
+  .text-stat {
+    font-family: var(--font-sans);
+    font-size: var(--fs-2xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: hsl(var(--text-heading));
+    font-variant-numeric: tabular-nums;
+  }
+  .text-stat-sm {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xl);
+    font-weight: var(--fw-bold);
+    line-height: var(--lh-tight);
+    letter-spacing: var(--ls-tight);
+    color: hsl(var(--text-heading));
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Card / widget titles (sub-section headings inside dashboards) */
+  .text-card-title {
+    font-family: var(--font-sans);
+    font-size: var(--fs-md);
+    font-weight: var(--fw-semibold);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--ls-tight);
+    color: hsl(var(--text-heading));
+  }
+
+  /* Table headers (uppercase) */
+  .text-th {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-semibold);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--ls-wider);
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Table cell + metadata labels */
+  .text-td {
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: var(--fw-regular);
+    line-height: var(--lh-normal);
+    letter-spacing: var(--ls-normal);
+    color: hsl(var(--text-body));
+  }
+
+  /* Tiny meta labels (stat captions, KPI labels above numbers) */
+  .text-meta {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
+    line-height: var(--lh-snug);
+    letter-spacing: var(--ls-wide);
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Table cells: tighter line-height + truncation-friendly wrapping so
+     long content (emails, URLs, IDs) doesn't blow out column widths. */
+  th, td {
+    line-height: 1.45;
+    letter-spacing: 0.005em;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+
+  /* Labels & small UI text: slight positive tracking improves legibility
+     at small sizes. */
+  label,
+  .text-label {
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+}
+
+@layer utilities {
+  .section-padding {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-app {
+    @apply max-w-7xl mx-auto section-padding;
+  }
+
+  .surface-warm {
+    background-color: hsl(var(--surface-warm));
+  }
+
+  .text-body {
+    color: hsl(var(--text-body));
+  }
+
+  .animate-reveal {
+    animation: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-reveal-delay-1 { animation: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+  .animate-reveal-delay-2 { animation: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both; }
+  .animate-reveal-delay-3 { animation: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both; }
+  .animate-reveal-delay-4 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both; }
+  .animate-reveal-delay-5 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+  .animate-reveal-delay-6 { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both; }
+}
+
+/* ================================================================
+   Elevation aliases (guideline vocabulary) + reduced-motion guard.
+   Additive: map to existing --shadow-* tokens; no visual regression.
+   ================================================================ */
+@layer utilities {
+  .elevation-sm { box-shadow: var(--shadow-sm); }
+  .elevation-md { box-shadow: var(--shadow-md); }
+  .elevation-lg { box-shadow: var(--shadow-lg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+/* Splash screen animations */
+@keyframes splash-icon-enter {
+  0% { opacity: 0; transform: scale(0.6) rotate(-12deg); filter: blur(6px); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); filter: blur(0); }
+}
+
+@keyframes splash-text-enter {
+  0% { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes splash-bar-enter {
+  0% { opacity: 0; transform: scaleX(0.7); }
+  100% { opacity: 1; transform: scaleX(1); }
+}
+
+.splash-icon {
+  animation: splash-icon-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.splash-text {
+  animation: splash-text-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+}
+
+.splash-bar {
+  animation: splash-bar-enter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.55s both;
+}
+
+/* ================================================================
+   Skeleton shimmer — subtle sheen swept across skeleton surfaces.
+   Applied by <Skeleton /> in addition to the base pulse.
+   ================================================================ */
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-image: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.08) 40%,
+    hsl(var(--muted-foreground) / 0.14) 50%,
+    hsl(var(--muted-foreground) / 0.08) 60%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background-image: none;
+  }
+}
+
+
+/* ================================================================
+   Token-based text measure, wrapping & truncation utilities.
+   Use inside cards/tables to prevent overflow at every breakpoint.
+   ================================================================ */
+@layer utilities {
+  /* Max line-length (measure) — caps width without forcing a layout box */
+  .measure-xs { max-width: var(--measure-xs); }
+  .measure-sm { max-width: var(--measure-sm); }
+  .measure-md { max-width: var(--measure-md); }
+  .measure-lg { max-width: var(--measure-lg); }
+  .measure-xl { max-width: var(--measure-xl); }
+
+  /* Wrapping — safe defaults that keep long words/URLs/emails in-bounds */
+  .wrap-anywhere { overflow-wrap: anywhere; word-break: normal; }
+  .wrap-balance  { text-wrap: balance; }     /* headings */
+  .wrap-pretty   { text-wrap: pretty; }      /* paragraphs */
+  .break-token   { overflow-wrap: break-word; word-break: break-word; hyphens: auto; }
+
+  /* Single-line truncation */
+  .truncate-1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  /* Multi-line clamp (token-driven line count) */
+  .clamp-2, .clamp-3, .clamp-4, .clamp-5, .clamp-6 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+  }
+  .clamp-2 { -webkit-line-clamp: 2; line-clamp: 2; }
+  .clamp-3 { -webkit-line-clamp: 3; line-clamp: 3; }
+  .clamp-4 { -webkit-line-clamp: 4; line-clamp: 4; }
+  .clamp-5 { -webkit-line-clamp: 5; line-clamp: 5; }
+  .clamp-6 { -webkit-line-clamp: 6; line-clamp: 6; }
+
+  /* Card-scoped defaults — opt in by adding `.card-text` on a Card body
+     wrapper. Keeps paragraphs readable and prevents long tokens from
+     blowing out narrow cards on mobile. */
+  .card-text {
+    max-width: var(--measure-md);
+  }
+  .card-text p,
+  .card-text li {
+    overflow-wrap: anywhere;
+    text-wrap: pretty;
+  }
+  .card-text h1,
+  .card-text h2,
+  .card-text h3,
+  .card-text h4 {
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  /* Table cells — single-line ellipsis with a sensible max-width.
+     Apply `.cell-truncate` to any <TableCell>/<TableHead> that risks
+     overflow (IDs, emails, URLs, names). Pair with `title={value}`. */
+  .cell-truncate {
+    max-width: 22ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cell-truncate-sm { max-width: 14ch; }
+  .cell-truncate-md { max-width: 22ch; }
+  .cell-truncate-lg { max-width: 36ch; }
+
+  /* Tables hosting truncated cells need fixed layout so widths actually
+     constrain. Add `.table-fixed-cells` to the wrapping <Table>. */
+  .table-fixed-cells { table-layout: fixed; }
+  .table-fixed-cells td,
+  .table-fixed-cells th { min-width: 0; }
+}

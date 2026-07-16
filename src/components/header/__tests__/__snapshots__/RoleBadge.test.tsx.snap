@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RoleBadge — visual regression snapshots > renders Admin with hideOnMobile 1`] = `"items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-primary text-primary-foreground border-primary dark:border-background dark:ring-1 dark:ring-primary/40 dark:shadow-[0_0_0_1px_hsl(var(--background))] hidden md:inline-flex"`;
+
+exports[`RoleBadge — visual regression snapshots > renders Admin with stable token classes 1`] = `"inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-primary text-primary-foreground border-primary dark:border-background dark:ring-1 dark:ring-primary/40 dark:shadow-[0_0_0_1px_hsl(var(--background))]"`;
+
+exports[`RoleBadge — visual regression snapshots > renders Client with hideOnMobile 1`] = `"items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-muted text-muted-foreground border-border dark:bg-muted dark:text-foreground/80 dark:border-border hidden md:inline-flex"`;
+
+exports[`RoleBadge — visual regression snapshots > renders Client with stable token classes 1`] = `"inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-muted text-muted-foreground border-border dark:bg-muted dark:text-foreground/80 dark:border-border"`;
+
+exports[`RoleBadge — visual regression snapshots > renders Provider with hideOnMobile 1`] = `"items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-primary/10 text-primary border-primary/30 dark:bg-primary/15 dark:border-primary/50 hidden md:inline-flex"`;
+
+exports[`RoleBadge — visual regression snapshots > renders Provider with stable token classes 1`] = `"inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide border bg-primary/10 text-primary border-primary/30 dark:bg-primary/15 dark:border-primary/50"`;

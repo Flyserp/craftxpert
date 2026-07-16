@@ -1,0 +1,38 @@
+# SPA fallback for Apache / cPanel.
+# Requires mod_rewrite enabled and `AllowOverride All` in the vhost config.
+#
+# IMPORTANT — Subfolder deployments:
+#   If you deploy under a subfolder (e.g. https://example.com/app/), change
+#   BOTH `RewriteBase` and the final `RewriteRule` target to match that
+#   folder. Example for "/app/":
+#     RewriteBase /app/
+#     RewriteRule ^ /app/index.html [L]
+#   You must also build with VITE_BASE_PATH=/app/ so asset URLs are correct.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Don't rewrite real files or directories (assets, /assets/*.js, /favicon.ico, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else -> index.html so the client-side router can take over
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Long-cache hashed assets
+<IfModule mod_headers.c>
+  <FilesMatch "\.(?:js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|avif|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # Never cache the HTML entry
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Gzip / Brotli if available
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>

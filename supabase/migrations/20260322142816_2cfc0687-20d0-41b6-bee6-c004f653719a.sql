@@ -1,0 +1,1 @@
+UPDATE tenants SET logo_url = 'https://placeholder.com/logo.png', phone = '+1 (555) 123-4567', address = '123 Main St, Springfield, IL 62701' WHERE id = '6aaeb1a1-83e7-4187-b9e6-9233824e927b';

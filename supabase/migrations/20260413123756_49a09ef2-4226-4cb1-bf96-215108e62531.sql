@@ -1,0 +1,3 @@
+ALTER TABLE public.bookings
+  ADD COLUMN tax_amount NUMERIC DEFAULT 0,
+  ADD COLUMN tax_rate NUMERIC DEFAULT 0;

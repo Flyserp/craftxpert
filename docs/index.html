@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TaskHive Documentation v2.2.8 — WRAPCODERS</title>
+<meta name="description" content="Official documentation for TaskHive v2.2.8 — installation, Supabase backend, roles, PWA, deployment, and changelog." />
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo-dot"></span>
+    <div>
+      <h1>TaskHive Docs</h1>
+      <p class="version">Version 2.2.8 · by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></p>
+    </div>
+  </div>
+  <input id="search" type="search" placeholder="Search documentation..." aria-label="Search" />
+</header>
+
+<div class="layout">
+  <aside class="sidebar" aria-label="Sections">
+    <nav>
+      <a href="#introduction" class="active">1. Introduction</a>
+      <a href="#architecture">2. Architecture Overview</a>
+      <a href="#installation">3. Installation Guide</a>
+      <a href="#environment">4. Environment Setup (.env)</a>
+      <a href="#project-structure">5. Project Structure</a>
+      <a href="#supabase">6. Backend &amp; Data Model</a>
+      <a href="#auth">7. Authentication System</a>
+      <a href="#roles">8. Role-Based Access</a>
+      <a href="#payments">9. Payments &amp; Wallet</a>
+      <a href="#realtime">10. Realtime &amp; Notifications</a>
+      <a href="#pwa">11. PWA System</a>
+      <a href="#wizard">12. Setup Wizard</a>
+      <a href="#navigation">13. Navigation System</a>
+      <a href="#design-system">14. Design System</a>
+      <a href="#i18n-a11y">15. i18n &amp; Accessibility</a>
+      <a href="#performance">16. Performance</a>
+      <a href="#security">17. Security Model</a>
+      <a href="#testing">18. Testing &amp; QA</a>
+      <a href="#demo">19. Demo / Test Mode</a>
+      <a href="#deployment">20. Deployment Guide</a>
+      <a href="#troubleshooting">21. Troubleshooting</a>
+      <a href="#faq">22. FAQ</a>
+      <a href="#changelog">23. Changelog</a>
+    </nav>
+    <p class="credit">Crafted by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></p>
+  </aside>
+
+  <main class="content">
+    <section id="introduction">
+      <h2>1. Introduction</h2>
+      <p><strong>TaskHive</strong> is a production-ready, multi-role service marketplace platform built with React 18, Vite, TypeScript, Tailwind CSS, and a managed Supabase (Lovable Cloud) backend. It supports four user roles — Customer, Service Provider, Employer, and Admin — with end-to-end flows for bookings, job posting, applications, payments, reviews, messaging, and verification.</p>
+      <ul>
+        <li>Fully responsive PWA with installable mobile experience</li>
+        <li>Role-based dashboards and protected routes</li>
+        <li>Realtime messaging, notifications, and live updates</li>
+        <li>Provider subscriptions, sponsored services, and pay-per-job posting</li>
+        <li>Admin suite: users, verifications, payments, jobs, analytics, CMS, banners, coupons</li>
+      </ul>
+      <h3>Who is it for?</h3>
+      <ul>
+        <li><strong>Marketplace operators</strong> launching a Fiverr / TaskRabbit / Upwork style vertical.</li>
+        <li><strong>Franchises &amp; agencies</strong> that need per-tenant branding and isolated data.</li>
+        <li><strong>Solo founders</strong> who want a production baseline (auth, payments, admin) on day one.</li>
+      </ul>
+      <h3>Tech at a glance</h3>
+      <table>
+        <thead><tr><th>Layer</th><th>Stack</th></tr></thead>
+        <tbody>
+          <tr><td>Frontend</td><td>React 18, Vite 5, TypeScript 5, Tailwind CSS 3, shadcn/ui, Radix</td></tr>
+          <tr><td>State &amp; data</td><td>@tanstack/react-query, Zustand (transient UI), Supabase JS v2</td></tr>
+          <tr><td>Backend</td><td>Supabase Postgres 15, RLS, Edge Functions (Deno), pg_cron, Storage</td></tr>
+          <tr><td>AI</td><td>Lovable AI Gateway (Gemini + GPT models) for matching &amp; content</td></tr>
+          <tr><td>PWA</td><td>vite-plugin-pwa (Workbox), Web Push, background sync</td></tr>
+          <tr><td>Testing</td><td>Vitest, React Testing Library, Playwright (E2E)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="architecture">
+      <h2>2. Architecture Overview</h2>
+      <p>TaskHive is a single-page React app talking to a managed Postgres via PostgREST, with Deno edge functions for privileged / third-party work and Supabase Realtime for live channels.</p>
+<pre><code>┌────────────────────┐        ┌───────────────────────────────┐
+│  React 18 + Vite   │◄──────►│  Supabase (Lovable Cloud)     │
+│  shadcn / Tailwind │  HTTPS │  Postgres · Auth · Storage    │
+│  React Query cache │        │  Realtime · Edge Functions    │
+└─────────┬──────────┘        └──────────────┬────────────────┘
+          │  Web Push / SW                    │  pg_cron jobs
+          ▼                                   ▼
+   Service Worker                    Scheduled tasks
+   (Workbox precache)                (expire, reminders)
+</code></pre>
+      <h3>Request lifecycle</h3>
+      <ol>
+        <li>Component calls a hook (<code>useBookings</code>, <code>useServices</code>…).</li>
+        <li>Hook uses the shared <code>supabase</code> client from <code>src/integrations/supabase/client.ts</code>.</li>
+        <li>PostgREST enforces RLS using the caller's JWT.</li>
+        <li>Results are cached by React Query and invalidated by realtime channels or mutations.</li>
+      </ol>
+      <h3>Privileged work</h3>
+      <p>Anything requiring the service role, third-party APIs, or long-running logic goes into an edge function under <code>supabase/functions/&lt;name&gt;/index.ts</code>. Never call the service role from the browser.</p>
+    </section>
+
+    <section id="installation">
+      <h2>3. Installation Guide</h2>
+      <ol>
+        <li>Clone the repository or remix the Lovable project.</li>
+        <li>Install dependencies: <code>npm install</code> (or <code>bun install</code>).</li>
+        <li>Copy <code>.env.example</code> to <code>.env</code> and fill in Supabase keys (see §3).</li>
+        <li>Run the dev server: <code>npm run dev</code>.</li>
+        <li>Open <code>http://localhost:8080</code>.</li>
+      </ol>
+      <p class="note">Requires Node 18+ and a Supabase project (or use Lovable Cloud — included by default).</p>
+      <h3>Available scripts</h3>
+      <table>
+        <thead><tr><th>Script</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>npm run dev</code></td><td>Vite dev server with HMR on port 8080</td></tr>
+          <tr><td><code>npm run build</code></td><td>Production build to <code>dist/</code></td></tr>
+          <tr><td><code>npm run preview</code></td><td>Serve the built <code>dist/</code> locally</td></tr>
+          <tr><td><code>npm run lint</code></td><td>ESLint over <code>src/</code></td></tr>
+          <tr><td><code>npm run test</code></td><td>Vitest in watch mode</td></tr>
+          <tr><td><code>bunx tsgo --noEmit</code></td><td>Fast TypeScript typecheck</td></tr>
+        </tbody>
+      </table>
+      <h3>System requirements</h3>
+      <ul>
+        <li>Node.js 18.17+ (or Bun 1.1+)</li>
+        <li>2 GB free RAM for local dev</li>
+        <li>Modern browser (Chromium 110+, Firefox 115+, Safari 16+)</li>
+      </ul>
+    </section>
+
+    <section id="environment">
+      <h2>4. Environment Setup (.env)</h2>
+      <p>Three public variables are required at build time:</p>
+<pre><code>VITE_SUPABASE_URL="https://&lt;project-ref&gt;.supabase.co"
+VITE_SUPABASE_PUBLISHABLE_KEY="&lt;anon key&gt;"
+VITE_SUPABASE_PROJECT_ID="&lt;project-ref&gt;"</code></pre>
+      <p>Server-side secrets (edge functions only) — set via the Lovable secrets manager:</p>
+      <ul>
+        <li><code>SUPABASE_SERVICE_ROLE_KEY</code> — admin operations</li>
+        <li><code>LOVABLE_API_KEY</code> — AI gateway (smart matching, descriptions)</li>
+        <li><code>DEMO_RESET_SECRET</code> — gated demo data reset endpoint</li>
+      </ul>
+      <p class="note">Only variables prefixed with <code>VITE_</code> are exposed to the browser bundle. Anything else stays server-side and is only readable inside edge functions via <code>Deno.env.get()</code>.</p>
+      <h3>Optional integrations</h3>
+      <ul>
+        <li><code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code> — card payments &amp; webhooks</li>
+        <li><code>PAYPAL_CLIENT_ID</code>, <code>PAYPAL_SECRET</code> — PayPal payments</li>
+        <li><code>RESEND_API_KEY</code> — transactional email</li>
+        <li><code>GOOGLE_MAPS_API_KEY</code> — geocoding &amp; place search</li>
+        <li><code>VAPID_PUBLIC_KEY</code>, <code>VAPID_PRIVATE_KEY</code>, <code>VAPID_SUBJECT</code> — Web Push</li>
+      </ul>
+    </section>
+
+    <section id="project-structure">
+      <h2>5. Project Structure</h2>
+<pre><code>src/
+├── components/        UI building blocks (feature folders + shared ui/)
+│   ├── ui/            shadcn primitives + shared app kit (Heading, AppTable…)
+│   ├── provider/      Provider dashboards, portfolio, availability
+│   ├── client/        Customer flows (booking, favorites, reviews)
+│   ├── employer/      Job posting, applicants, hiring
+│   └── admin/         Admin panels (users, moderation, CMS)
+├── pages/             Route components (mirrors app/URL structure)
+├── hooks/             Reusable hooks (useAuth, usePermission, useRealtime…)
+├── lib/
+│   ├── api/           Typed API contracts (mobile-ready)
+│   ├── payments/      Stripe / PayPal helpers, fee math
+│   └── utils/         Formatting, i18n, currency
+├── integrations/
+│   └── supabase/      client.ts + generated types.ts (auto-generated)
+├── i18n/              Locale bundles (en, no)
+├── styles/            Global CSS + design tokens
+└── main.tsx           App bootstrap
+
+supabase/
+├── migrations/        Timestamped SQL migrations
+└── functions/         Deno edge functions (one folder per function)
+
+public/
+├── docs/              This documentation portal
+├── push-sw.js         Web-push service worker
+└── robots.txt, sitemap.xml
+</code></pre>
+      <p class="note">Auto-generated files under <code>src/integrations/supabase/</code> must never be edited by hand — they are regenerated from the schema.</p>
+    </section>
+
+    <section id="supabase">
+      <h2>6. Backend &amp; Data Model</h2>
+      <p>The client is pre-wired at <code>src/integrations/supabase/client.ts</code>. Schema is managed through versioned migrations under <code>supabase/migrations/</code>.</p>
+      <h3>Core tables (57 total)</h3>
+      <ul>
+        <li><strong>Identity:</strong> profiles, user_roles, provider_staff, employer_profiles</li>
+        <li><strong>Marketplace:</strong> vendor_services, tasks, task_proposals, bookings, reviews</li>
+        <li><strong>Money:</strong> wallets, wallet_transactions, payment_transactions, invoices, withdrawals, refund_requests, category_commissions</li>
+        <li><strong>Engagement:</strong> conversations, messages, notifications, favorites, saved_jobs</li>
+        <li><strong>CMS / Admin:</strong> cms_pages, homepage_content, banners, advertisements, platform_settings, promo_coupons, email_templates</li>
+        <li><strong>Trust &amp; Safety:</strong> vendor_verifications, disputes, content_reports, admin_audit_log</li>
+      </ul>
+      <h3>Key relationships</h3>
+<pre><code>auth.users ─┬─ profiles (1:1)
+            ├─ user_roles (1:N)   role ∈ {client,provider,provider_staff,employer,admin}
+            └─ wallets (1:1)
+
+profiles(provider) ─┬─ vendor_services (1:N) ─┬─ bookings (1:N) ─┬─ reviews (1:1)
+                    │                          │                  └─ payment_transactions
+                    ├─ vendor_verifications    └─ favorites
+                    └─ provider_staff (1:N)
+
+profiles(employer) ── tasks (1:N) ── task_proposals (1:N) ── bookings
+
+bookings ── invoices (1:1) ── withdrawals (via wallet_transactions)
+</code></pre>
+      <h3>Row-Level Security</h3>
+      <p>Every public table has RLS enabled. Policies follow four patterns:</p>
+      <ul>
+        <li><strong>Owner-only:</strong> <code>user_id = auth.uid()</code> (wallets, favorites, saved_jobs)</li>
+        <li><strong>Public read, owner write:</strong> vendor_services, reviews, profiles</li>
+        <li><strong>Party read:</strong> both parties in a booking / conversation can read</li>
+        <li><strong>Admin bypass:</strong> <code>has_role(auth.uid(), 'admin')</code> via SECURITY DEFINER</li>
+      </ul>
+      <h3>Storage buckets</h3>
+      <table>
+        <thead><tr><th>Bucket</th><th>Access</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>avatars</td><td>public</td><td>User profile pictures (2 MB cap)</td></tr>
+          <tr><td>branding, tenant-logos</td><td>public</td><td>Platform + per-tenant logos</td></tr>
+          <tr><td>portfolio</td><td>public</td><td>Provider portfolio images</td></tr>
+          <tr><td>task-photos, review-photos</td><td>public</td><td>Attached to tasks / reviews</td></tr>
+          <tr><td>chat-attachments</td><td>public</td><td>Signed on-demand, gated by conversation RLS</td></tr>
+          <tr><td>verification-docs</td><td>private</td><td>KYC docs — signed URLs only</td></tr>
+          <tr><td>receipts</td><td>private</td><td>PDF receipts via <code>generate-booking-receipt</code></td></tr>
+          <tr><td>demo-gallery</td><td>private</td><td>Demo fixtures for /demos</td></tr>
+        </tbody>
+      </table>
+      <h3>Edge functions</h3>
+      <table>
+        <thead><tr><th>Function</th><th>Trigger</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>seed-demo-users</td><td>admin</td><td>Bootstrap 5 demo accounts and fixtures</td></tr>
+          <tr><td>reset-demo-data</td><td>pg_cron / admin</td><td>Rewind demo state every 6h</td></tr>
+          <tr><td>send-booking-email</td><td>trigger</td><td>Transactional emails on booking events</td></tr>
+          <tr><td>generate-booking-receipt</td><td>on completion</td><td>PDF receipt with commission breakdown</td></tr>
+          <tr><td>generate-task-description</td><td>UI</td><td>Gemini-powered task drafts</td></tr>
+          <tr><td>smart-match-vendor</td><td>UI</td><td>Ranks providers using AI + heuristics</td></tr>
+          <tr><td>invite-staff / resend-staff-invitation</td><td>UI</td><td>Provider staff invites</td></tr>
+          <tr><td>validate-coupon</td><td>checkout</td><td>Server-side coupon validation</td></tr>
+          <tr><td>geocode-search</td><td>UI</td><td>Address lookup via Google Places</td></tr>
+          <tr><td>review-reminder</td><td>pg_cron</td><td>Nudges customers 48h after completion</td></tr>
+          <tr><td>send-push / dispatch-notification-channels</td><td>trigger</td><td>Fan-out to email / push / in-app</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="auth">
+      <h2>7. Authentication System</h2>
+      <p>Email/password authentication powered by Supabase Auth with optional Google OAuth. Sessions persist via <code>localStorage</code> with auto-refresh.</p>
+      <ul>
+        <li>Sign up → <code>handle_new_user()</code> trigger creates a profile + assigns role from <code>user_metadata.role</code>.</li>
+        <li>Sign in → <code>log_login_event()</code> writes to <code>admin_audit_log</code>.</li>
+        <li>Soft-delete via <code>profiles.deleted_at</code> blocks sign-in and signs the user out.</li>
+        <li>Profile completion gate (<code>/complete-profile</code>) for first-time users.</li>
+      </ul>
+      <h3>Flows</h3>
+      <ol>
+        <li><strong>Email sign-up</strong> → confirmation email → callback at <code>/auth/callback</code> → role assigned → onboarding wizard.</li>
+        <li><strong>Google OAuth</strong> → redirect_uri = <code>${window.location.origin}/auth/callback</code>; Supabase provider must be enabled.</li>
+        <li><strong>Password reset</strong> → <code>supabase.auth.resetPasswordForEmail()</code> with redirect to <code>/reset-password</code>.</li>
+        <li><strong>Session hydration</strong> → <code>useAuth()</code> subscribes to <code>onAuthStateChange</code> and gates all protected routes.</li>
+      </ol>
+      <h3>Session lifecycle</h3>
+      <p>Tokens auto-refresh every ~55 min. On <code>SIGNED_OUT</code> the app clears React Query cache and redirects to <code>/login</code>. On <code>TOKEN_REFRESHED</code> the new JWT propagates to realtime channels automatically.</p>
+      <h3>Common pitfalls</h3>
+      <ul>
+        <li>Never call auth methods inside a Supabase auth callback synchronously — always <code>setTimeout(..., 0)</code> to avoid deadlocks.</li>
+        <li>Do not point OAuth <code>redirect_uri</code> at a protected route; use <code>/auth/callback</code> and navigate after session hydration.</li>
+      </ul>
+    </section>
+
+    <section id="roles">
+      <h2>8. Role-Based Access System</h2>
+      <p>Roles live in a separate <code>user_roles</code> table (never on profiles) and are checked via the <code>has_role(uuid, app_role)</code> security-definer function.</p>
+      <table>
+        <thead><tr><th>Role</th><th>Dashboard</th><th>Capabilities</th></tr></thead>
+        <tbody>
+          <tr><td>client (customer)</td><td>/client-dashboard</td><td>Browse services, book, post tasks, leave reviews</td></tr>
+          <tr><td>provider</td><td>/provider-dashboard</td><td>List services, apply to jobs, manage bookings, sponsor listings</td></tr>
+          <tr><td>provider_staff</td><td>/staff-dashboard</td><td>Operate on behalf of a provider (treated as provider for UI gating)</td></tr>
+          <tr><td>employer</td><td>/employer-dashboard</td><td>Post jobs, review applicants, hire providers</td></tr>
+          <tr><td>admin</td><td>/admin</td><td>Full platform access — users, payments, moderation, settings</td></tr>
+        </tbody>
+      </table>
+      <p>Frontend gates: <code>&lt;ProtectedRoute requiredRole&gt;</code>, <code>&lt;Can&gt;</code>, and the <code>usePermission()</code> hook.</p>
+      <h3>Permission matrix</h3>
+      <table>
+        <thead><tr><th>Capability</th><th>client</th><th>provider</th><th>employer</th><th>admin</th></tr></thead>
+        <tbody>
+          <tr><td>Book a service</td><td>✓</td><td>—</td><td>—</td><td>✓</td></tr>
+          <tr><td>List a service</td><td>—</td><td>✓</td><td>—</td><td>✓</td></tr>
+          <tr><td>Post a job / task</td><td>✓</td><td>—</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Apply to jobs</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Approve payouts</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+          <tr><td>Moderate content</td><td>—</td><td>—</td><td>—</td><td>✓</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="payments">
+      <h2>9. Payments &amp; Wallet</h2>
+      <p>Money flows through a ledger-style <code>wallet_transactions</code> table. Every debit has a matching credit, and balances are computed from the ledger — never stored raw.</p>
+      <h3>Providers supported</h3>
+      <ul>
+        <li><strong>Stripe</strong> — cards, 3DS, webhooks for capture &amp; refund</li>
+        <li><strong>PayPal</strong> — Orders v2 API, capture on approval</li>
+        <li><strong>Wallet</strong> — internal credit for refunds and promo balance</li>
+      </ul>
+      <h3>Fee math</h3>
+<pre><code>gross         = service_price × qty
+deposit       = gross × 0.25          // 25% up front
+platform_fee  = gross × commission_rate  // per-category, default 10%
+processor_fee = provider-specific       // Stripe ~2.9% + 30¢
+provider_net  = gross − platform_fee − processor_fee
+</code></pre>
+      <h3>Booking states</h3>
+      <p><code>pending → deposit_paid → confirmed → in_progress → completed → reviewed</code>, with side-branches <code>cancelled</code>, <code>disputed</code>, <code>refunded</code>. Transitions are enforced by a Postgres trigger and mirrored in <code>admin_audit_log</code>.</p>
+      <h3>Invoices</h3>
+      <p>Format: <code>INV-YYYYMMDD-&lt;seq&gt;</code>. PDF is rendered inside <code>generate-booking-receipt</code> and stored in the private <code>receipts</code> bucket; the UI serves signed URLs valid for 1 hour.</p>
+      <h3>Withdrawals</h3>
+      <p>Providers request payouts from their wallet; admins approve. The approval writes a <code>wallet_transactions</code> debit and an off-platform <code>withdrawals</code> row with the payout reference.</p>
+    </section>
+
+    <section id="realtime">
+      <h2>10. Realtime &amp; Notifications</h2>
+      <h3>Channel pattern</h3>
+<pre><code>// ✅ Correct — register handlers BEFORE subscribing.
+const channel = supabase.channel(`chat-${conversationId}-${uuid}`)
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'messages',
+       filter: `conversation_id=eq.${conversationId}` }, handleMessage)
+  .subscribe();
+
+return () =&gt; supabase.removeChannel(channel);
+</code></pre>
+      <ul>
+        <li>Always use a unique channel id (<code>useRef(crypto.randomUUID())</code>) to prevent collisions across mounts.</li>
+        <li>Never call <code>.on()</code> after <code>.subscribe()</code> — handlers silently drop.</li>
+        <li>Clean up in the effect return; leaks show up as duplicate toasts.</li>
+      </ul>
+      <h3>Notification channels</h3>
+      <p>The <code>dispatch-notification-channels</code> edge function fans a single notification out to any enabled channel per-user: in-app toast, email (Resend), and Web Push. Preferences live in <code>notification_preferences</code>.</p>
+      <h3>Push notifications</h3>
+      <p>Subscription happens in <code>usePushNotifications()</code> — VAPID key from env, subscription persisted in <code>push_subscriptions</code>, and delivery goes through <code>send-push</code>.</p>
+    </section>
+
+    <section id="pwa">
+      <h2>11. PWA System</h2>
+      <ul>
+        <li>Service worker via <code>vite-plugin-pwa</code> with Workbox precaching and background sync.</li>
+        <li>Push notifications through <code>public/push-sw.js</code> + <code>send-push</code> edge function.</li>
+        <li>Per-tenant branding (light/dark/PWA logo, theme color, manifest) injected at runtime from <code>platform_settings</code> via <code>usePwaBranding()</code>.</li>
+        <li>Install prompt managed by <code>usePwaInstall()</code> with iOS guidance fallback.</li>
+      </ul>
+      <h3>Caching strategy</h3>
+      <table>
+        <thead><tr><th>Asset</th><th>Strategy</th><th>TTL</th></tr></thead>
+        <tbody>
+          <tr><td>App shell (JS/CSS/HTML)</td><td>Precache + <em>self-update</em></td><td>Immediate on new SW</td></tr>
+          <tr><td>Images from Supabase Storage</td><td>Cache-first</td><td>30 days</td></tr>
+          <tr><td>API GET requests</td><td>Network-first with 3s fallback</td><td>5 min</td></tr>
+          <tr><td>POST/PATCH/DELETE</td><td>Background sync queue</td><td>Retry until online</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="wizard">
+      <h2>12. Setup Wizard System</h2>
+      <p>New users complete onboarding via <code>OnboardingWizard.tsx</code>:</p>
+      <ol>
+        <li>Choose role and basic identity</li>
+        <li>Complete profile (display name, phone, address, bio, avatar)</li>
+        <li>Role-specific extras (business name + categories for providers, company for employers)</li>
+        <li>Optional: take the interactive product tour</li>
+      </ol>
+      <p>Admins configure platform-wide defaults at <code>/admin/platform-settings</code> (branding, logos, theme, email).</p>
+      <h3>Provider verification checklist</h3>
+      <ul>
+        <li>Government ID (front + back) → <code>verification-docs</code> bucket</li>
+        <li>Business registration (optional)</li>
+        <li>Insurance certificate (optional, category-dependent)</li>
+        <li>Manual admin review at <code>/admin/verifications</code></li>
+      </ul>
+    </section>
+
+    <section id="navigation">
+      <h2>13. Navigation System (Responsive)</h2>
+      <ul>
+        <li><strong>Desktop (≥1024px):</strong> <code>UnifiedHeader</code> + sticky <code>ProfileRail</code> sidebar on dashboards.</li>
+        <li><strong>Tablet (768–1023px):</strong> Collapsible sidebar with icon-only mode.</li>
+        <li><strong>Mobile (&lt;768px):</strong> Hamburger drawer; bottom nav pills removed in v2.1 for a cleaner surface.</li>
+        <li>Header z-index: <code>60</code> (above portaled dropdowns at <code>50</code>) to keep sticky header visible.</li>
+        <li>Container width: main content capped at <code>max-w-5xl</code> for readability.</li>
+      </ul>
+      <h3>Breakpoints</h3>
+<pre><code>sm  640   // large phone
+md  768   // tablet portrait
+lg  1024  // tablet landscape / small laptop
+xl  1280  // desktop
+2xl 1536  // wide desktop
+</code></pre>
+    </section>
+
+    <section id="design-system">
+      <h2>14. Design System</h2>
+      <p>All colors, gradients, and shadows are HSL design tokens in <code>src/index.css</code> and consumed via Tailwind semantic classes (<code>bg-primary</code>, <code>text-accent</code>). Never hardcode hex or <code>text-white</code>-style utilities.</p>
+      <h3>Palette</h3>
+      <table>
+        <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>--primary</td><td>#00272c (deep teal)</td><td>lime 69 100% 66%</td><td>Buttons, header, focus rings</td></tr>
+          <tr><td>--accent</td><td>#e1ff51 (lime)</td><td>deep teal</td><td>CTAs, highlights, badges</td></tr>
+          <tr><td>--background</td><td>#f7f9f7</td><td>#0d1a1c</td><td>Page background</td></tr>
+          <tr><td>--border</td><td>#dad7cd</td><td>#20303235</td><td>Cards, dividers</td></tr>
+        </tbody>
+      </table>
+      <h3>Typography</h3>
+      <ul>
+        <li>Font family: <strong>Inter</strong> (fallback Geist, system-ui).</li>
+        <li>Centralized classes: <code>.text-heading</code>, <code>.text-subheading</code>, <code>.text-body</code>, <code>.text-description-sm</code>, <code>.text-lead</code>, <code>.text-eyebrow</code>.</li>
+        <li>Never hand-roll <code>text-sm text-muted-foreground</code> for descriptions — use the token class.</li>
+      </ul>
+      <h3>Component kit</h3>
+      <p>Shared building blocks live in <code>src/components/ui/app/</code>: <code>Heading</code>, <code>AppTable</code>, <code>LoadingState</code>, <code>EmptyState</code>, <code>LandingCTAButton</code>, <code>SectionShell</code>. Prefer these over rolling one-off components.</p>
+    </section>
+
+    <section id="i18n-a11y">
+      <h2>15. Internationalization &amp; Accessibility</h2>
+      <h3>i18n</h3>
+      <ul>
+        <li>Powered by <code>react-i18next</code>. Bundles under <code>src/i18n/&lt;locale&gt;/*.json</code>.</li>
+        <li>Default locale: English. Norwegian (<code>no</code>) shipped.</li>
+        <li>Currency &amp; date formatting via <code>Intl</code> APIs — no third-party.</li>
+      </ul>
+      <h3>Accessibility</h3>
+      <ul>
+        <li>Every interactive element has an accessible name (aria-label or visible text).</li>
+        <li>Color contrast ≥ 4.5:1 for body, ≥ 3:1 for large text — verified with the a11y test suite.</li>
+        <li>Focus rings preserved (never <code>outline: none</code> without a replacement).</li>
+        <li>Semantic headings via <code>&lt;Heading level={n}&gt;</code>; only one <code>h1</code> per page.</li>
+        <li>Modals trap focus and restore it on close (Radix Dialog).</li>
+      </ul>
+    </section>
+
+    <section id="performance">
+      <h2>16. Performance</h2>
+      <ul>
+        <li><strong>Route-level code splitting</strong> via <code>React.lazy</code> — initial JS &lt; 180 KB gzip.</li>
+        <li><strong>React Query</strong> with 60s stale time on read-heavy screens; realtime subscriptions invalidate on the fly.</li>
+        <li><strong>Image optimization</strong> — WebP with lazy loading; Supabase transform URLs used for avatars &amp; portfolio.</li>
+        <li><strong>Bundle guardrail</strong> — <code>public/bundle-size-history.json</code> tracks each release; CI fails on &gt; 10% growth.</li>
+        <li><strong>DB indexes</strong> on <code>bookings(status, provider_id)</code>, <code>messages(conversation_id, created_at)</code>, <code>vendor_services(category_id, is_active)</code>.</li>
+      </ul>
+    </section>
+
+    <section id="security">
+      <h2>17. Security Model</h2>
+      <ul>
+        <li><strong>RLS everywhere.</strong> No public-schema table ships without an RLS policy AND a GRANT.</li>
+        <li><strong>Roles table.</strong> Roles never live on profiles — that would allow privilege escalation via profile updates.</li>
+        <li><strong>Security-definer functions</strong> (<code>has_role</code>, <code>is_admin</code>) run with owner privileges to avoid recursive RLS.</li>
+        <li><strong>No client-side admin checks.</strong> UI gates are cosmetic — the database is the source of truth.</li>
+        <li><strong>Audit log.</strong> <code>admin_audit_log</code> receives triggers from payments, bookings, jobs, verifications, disputes, sponsorships.</li>
+        <li><strong>File uploads</strong> validated by size + MIME on the client and re-checked in the storage policy.</li>
+        <li><strong>Webhooks</strong> verify signatures (Stripe, PayPal) before mutating state.</li>
+      </ul>
+    </section>
+
+    <section id="testing">
+      <h2>18. Testing &amp; QA</h2>
+      <ul>
+        <li><strong>Unit / component:</strong> Vitest + React Testing Library — <code>src/**/*.test.tsx</code>.</li>
+        <li><strong>Accessibility:</strong> <code>dashboards.a11y.test.tsx</code> asserts landmark + heading structure on every dashboard.</li>
+        <li><strong>E2E:</strong> Playwright suite drives the running preview at <code>http://localhost:8080</code>.</li>
+        <li><strong>Typecheck:</strong> <code>bunx tsgo --noEmit</code> — fastest way to gate a refactor.</li>
+        <li><strong>Migrations:</strong> Every new table is followed by RLS + GRANT in the same migration; CI verifies.</li>
+      </ul>
+    </section>
+
+    <section id="demo">
+      <h2>19. Demo / Test Mode System</h2>
+      <p>Demo accounts are seeded via the <code>seed-demo-users</code> edge function. Credentials are listed on <code>/demo-login</code>.</p>
+      <ul>
+        <li>Admin, Provider, Customer, Employer, and Staff demo logins</li>
+        <li>Mock services, bookings, reviews, conversations, and notifications</li>
+        <li>Auto-reset every 6 hours via <code>reset-demo-data</code> (gated by <code>DEMO_RESET_SECRET</code>)</li>
+      </ul>
+      <p class="note">Demo mode never touches real payment providers — it uses fixture Stripe test tokens and short-circuits webhook side effects.</p>
+    </section>
+
+    <section id="deployment">
+      <h2>20. Deployment Guide</h2>
+      <ol>
+        <li>Click <strong>Publish</strong> in Lovable (top-right) to deploy the frontend to <code>*.lovable.app</code>.</li>
+        <li>Backend changes (migrations, edge functions) deploy automatically when approved in chat.</li>
+        <li>Connect a custom domain under <strong>Project Settings → Domains</strong>.</li>
+        <li>Run <code>npm run build</code> to produce a static <code>dist/</code> if self-hosting.</li>
+        <li>Self-host: any static host (Vercel, Netlify, Cloudflare Pages) — set the three <code>VITE_*</code> env vars.</li>
+      </ol>
+      <h3>Go-live checklist</h3>
+      <ul>
+        <li>Set real branding + logos in <code>/admin/platform-settings</code></li>
+        <li>Configure Stripe / PayPal keys and webhook endpoints</li>
+        <li>Enable Google OAuth provider (if using social login)</li>
+        <li>Populate legal pages (Terms, Privacy) via CMS</li>
+        <li>Verify sitemap.xml, robots.txt, and SEO metadata per page</li>
+        <li>Test Web Push on a real mobile device</li>
+        <li>Run demo-data reset OFF in production</li>
+      </ul>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>21. Troubleshooting</h2>
+      <dl>
+        <dt>"Permission denied for table" from PostgREST</dt>
+        <dd>The table is missing a <code>GRANT</code>. Every public-schema table needs explicit grants to <code>authenticated</code> / <code>service_role</code>.</dd>
+        <dt>Realtime channel never fires</dt>
+        <dd>Register all <code>.on()</code> handlers <em>before</em> <code>.subscribe()</code>, and use a unique channel id.</dd>
+        <dt>Sticky header hides when a dropdown opens</dt>
+        <dd>Fixed in v2.1.0 — Radix scroll-lock is neutralized in <code>index.css</code> and header is <code>z-[60]</code>.</dd>
+        <dt>"Unsupported provider" on Google login</dt>
+        <dd>Enable Google provider in the Lovable Cloud auth settings.</dd>
+        <dt>"Invalid Refresh Token" after long idle</dt>
+        <dd>Session expired past the 30-day refresh window. Sign the user out and back in — a fresh session hydrates cleanly.</dd>
+        <dt>Push notifications don't arrive on iOS</dt>
+        <dd>iOS requires the app to be installed as a PWA (Add to Home Screen) and Web Push enabled in Settings → Notifications.</dd>
+        <dt>Realtime works locally, not in production</dt>
+        <dd>Check that the Realtime extension is enabled for the table (<code>alter publication supabase_realtime add table &lt;name&gt;</code>).</dd>
+        <dt>PDF receipts return 403</dt>
+        <dd>Signed URL expired (1h TTL). Re-fetch via the invoice detail endpoint to get a fresh URL.</dd>
+      </dl>
+    </section>
+
+    <section id="faq">
+      <h2>22. FAQ</h2>
+      <dl>
+        <dt>Can I rebrand the platform?</dt>
+        <dd>Yes — every color, logo, and copy block is editable. Per-tenant branding overrides primary/accent at runtime.</dd>
+        <dt>Does it support multi-tenancy?</dt>
+        <dd>Path-based multi-tenancy is included with RLS-isolated data per tenant.</dd>
+        <dt>What payment providers are supported?</dt>
+        <dd>Stripe and PayPal scaffolding with 25% deposit logic and commission tracking.</dd>
+        <dt>Is the source code editable?</dt>
+        <dd>Yes — full TypeScript source ships in the repo.</dd>
+        <dt>Can I swap Supabase for another backend?</dt>
+        <dd>Technically yes — data access is centralized under <code>src/lib/api/</code>. Practically it's a large rewrite because RLS, edge functions, and realtime channels are all Supabase-native.</dd>
+        <dt>How do I add a new user role?</dt>
+        <dd>Extend the <code>app_role</code> enum in a migration, update <code>ProtectedRoute</code>/<code>usePermission</code>, add a dashboard route, and write RLS policies referencing <code>has_role(auth.uid(), '&lt;new-role&gt;')</code>.</dd>
+        <dt>Where do I add a new email template?</dt>
+        <dd>Insert a row into <code>email_templates</code> via the admin UI or migration; reference the template key from the calling edge function.</dd>
+        <dt>How do I localize the app for a new language?</dt>
+        <dd>Duplicate <code>src/i18n/en/</code> to <code>src/i18n/&lt;code&gt;/</code>, translate the JSON keys, and add the language to the locale switcher.</dd>
+      </dl>
+    </section>
+
+    <section id="changelog">
+      <h2>23. Changelog</h2>
+
+      <article class="release">
+        <header><h3>Version 2.2.8</h3><span class="date">July 16, 2026</span></header>
+        <h4>Added</h4>
+        <ul>
+          <li><strong>Brand token validator</strong> (<code>src/lib/brand/validateBrandToken.ts</code>) — converts <code>brand_accent</code> hex to <code>H S% L%</code> and logs any mismatch between the stored token and the resolved CSS variable at startup; wired into <code>PwaBrandingApplier</code></li>
+          <li><strong>Accent visual regression script</strong> (<code>scripts/accent-visual-regression.py</code>) — Playwright-driven before/after screenshots of key tenant pages when <code>brand_accent</code> changes</li>
+          <li><strong>Reload-flow E2E</strong> (<code>scripts/reload-flow-e2e.py</code>) — seeds stale Cache Storage entries and asserts the returning-user reload path purges branding caches, preserves foreign SW caches, and renders the new accent on first paint</li>
+          <li><strong>Shared branding cache purge</strong> (<code>src/lib/pwa/purgeBrandingCaches.ts</code>) — extracted <code>BRANDING_CACHE_NAMES</code>, <code>BRANDING_URL_HINTS</code>, and <code>purgeBrandingCaches()</code> so production and tests share one implementation</li>
+          <li><strong>Tenant brand versioning</strong> — new <code>brand_version</code> row in <code>platform_settings</code> with an <code>auto_bump_brand_version</code> Postgres trigger that fires on any branding write (colors, logos, favicon, OG image, PWA icon)</li>
+          <li><strong>Cache-busting helper</strong> (<code>src/lib/brand/brandVersion.ts</code>) — <code>withBrandVersion()</code> appends <code>?bv=&lt;version&gt;</code> to branding URLs, mirrored in <code>localStorage</code> so the very first paint is already versioned</li>
+          <li><code>notifyBrandingUpdated()</code> event dispatched from <code>BrandingSettingsPage</code> so every mounted <code>usePwaBranding()</code> refetches immediately after an admin save</li>
+        </ul>
+        <h4>Changed</h4>
+        <ul>
+          <li><code>usePwaBranding</code> now reads <code>brand_version</code> alongside branding keys and returns every asset URL pre-busted with <code>?bv=&lt;version&gt;</code>; falls back to a stable per-URL hash only on the very first uncached paint</li>
+          <li><code>main.tsx</code> reload flow calls <code>purgeBrandingCaches()</code> on <code>controllerchange</code> before <code>window.location.reload()</code> so returning users never see a stale accent flash</li>
+          <li>Supabase generated <code>types.ts</code> refreshed to expose the new <code>brand_version</code> key</li>
+        </ul>
+        <h4>Fixed</h4>
+        <ul>
+          <li>Provider profile page container padding — <code>pt-6</code> → <code>py-6</code> on the <code>max-w-3xl</code> wrapper (top/bottom padding instead of top-only)</li>
+        </ul>
+        <h4>Backend</h4>
+        <ul>
+          <li>Migration adds <code>brand_version</code> to <code>platform_settings</code> and installs the <code>auto_bump_brand_version</code> trigger against all branding-related setting rows</li>
+        </ul>
+      </article>
+
+
+      <article class="release">
+        <header><h3>Version 2.1.4</h3><span class="date">July 8, 2026</span></header>
+        <h4>Added</h4>
+        <ul>
+          <li>Expanded documentation portal (23 sections) with architecture diagram, permission matrix, fee math, caching table, and go-live checklist</li>
+          <li>Dedicated Payments &amp; Wallet, Realtime, Design System, Security, i18n/A11y, and Performance chapters</li>
+          <li>Project structure map and edge-function reference table</li>
+        </ul>
+        <h4>Changed</h4>
+        <ul>
+          <li>Sidebar renumbered from 14 → 23 sections; ordering groups foundations, features, quality, and ops</li>
+        </ul>
+      </article>
+
+      <article class="release">
+        <header><h3>Version 2.1.3</h3><span class="date">June 30, 2026</span></header>
+        <h4>Added</h4>
+        <ul>
+          <li>WRAPCODERS branding across documentation and footer credits</li>
+          <li>Refreshed SaaS-grade documentation portal (14 sections, sidebar nav, search)</li>
+          <li>Per-tenant branding overrides for primary/accent colors with HSL injection</li>
+          <li>Standardized <code>LandingCTAButton</code> and shared UI library (<code>AppTable</code>, <code>LoadingState</code>, <code>EmptyState</code>)</li>
+          <li>Sponsored Services module with admin promotion tools and ranking weights</li>
+          <li>Featured providers, category commission settings, and coupon system</li>
+          <li>Homepage section ordering (drag-and-drop), CMS pages, banners, advertisements</li>
+          <li>Interactive onboarding tours and Demo Gallery (<code>/demos</code>)</li>
+          <li>Mobile-ready API contracts under <code>src/lib/api/</code></li>
+        </ul>
+        <h4>Changed</h4>
+        <ul>
+          <li>Border radius token <code>sm</code> resolves to 0.5rem (8px) for unified buttons/chips</li>
+          <li>Button typography forced to 13px; sidebar items 14px; group labels 11px uppercase</li>
+          <li>Main content container capped at <code>max-w-5xl</code></li>
+          <li>Footer newsletter restyled with editorial split layout and subtle lime wash</li>
+          <li>Profile dropdown consolidated into a single menu in the sidebar footer</li>
+        </ul>
+        <h4>Fixed</h4>
+        <ul>
+          <li>Supabase Realtime channel leaks in <code>useHomepageContent</code></li>
+          <li>Sticky header hidden by Radix scroll-lock when dropdowns opened (z-index + body style override)</li>
+          <li>Tabs dark-mode contrast and 13px typography</li>
+          <li>Table cell wrapping (<code>whitespace-nowrap</code>) and pagination spacing</li>
+          <li>Demo sign-in button text color forced to white</li>
+        </ul>
+        <h4>Backend</h4>
+        <ul>
+          <li>Schema synced — 57 tables, RLS enabled on all, security-definer <code>has_role()</code> in place</li>
+          <li>Admin audit log triggers for payments, bookings, jobs, verifications, disputes, sponsorships</li>
+          <li>pg_cron automation: <code>expire_overdue_tasks</code>, <code>expire_sponsored_services</code>, <code>expire_featured_services</code></li>
+          <li>Storage buckets verified (10 buckets, correct public/private split)</li>
+        </ul>
+      </article>
+
+      <article class="release">
+        <header><h3>Version 2.0.0</h3><span class="date">Initial public release</span></header>
+        <ul>
+          <li>Four roles, full marketplace, payments, messaging, reviews, admin suite</li>
+          <li>PWA install, push notifications, multi-tenancy, SEO sitemap</li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="docs-footer">
+      <p>© 2026 TaskHive Documentation · Crafted by <a href="https://wrapcoders.com/" target="_blank" rel="noopener">WRAPCODERS</a></p>
+    </footer>
+  </main>
+</div>
+
+<script src="./script.js"></script>
+</body>
+</html>

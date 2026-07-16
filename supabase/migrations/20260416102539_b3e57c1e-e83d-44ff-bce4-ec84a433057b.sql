@@ -1,0 +1,1 @@
+ALTER TABLE public.service_subcategories ADD COLUMN sort_order integer NOT NULL DEFAULT 0;

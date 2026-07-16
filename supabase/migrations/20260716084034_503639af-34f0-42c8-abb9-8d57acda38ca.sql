@@ -1,0 +1,1 @@
+UPDATE public.platform_settings SET value = '#8AAD1F', updated_at = now() WHERE key = 'brand_accent';

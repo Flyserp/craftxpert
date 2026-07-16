@@ -1,0 +1,17 @@
+{
+  "$comment": "Build targets verified by scripts/check-bundle-size.mjs. Each target has its own dist dir, tolerance, and baseline (in bundle-size.baselines.json).",
+  "targets": {
+    "production": {
+      "build": "vite build",
+      "dist": "dist/assets",
+      "tolerance": 0.03,
+      "env": { "ANALYZE": "1" }
+    },
+    "development": {
+      "build": "vite build --mode development",
+      "dist": "dist-dev/assets",
+      "tolerance": 0.05,
+      "env": {}
+    }
+  }
+}

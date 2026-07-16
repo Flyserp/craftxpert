@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /moderator-*
+Disallow: /vendor-*
+Disallow: /customer-*
+Disallow: /client-dashboard
+Disallow: /provider-*
+Disallow: /employer-*
+Disallow: /wallet
+Disallow: /chat
+Disallow: /notifications
+Disallow: /settings
+Disallow: /profile
+Disallow: /complete-profile
+Disallow: /accept-invite/
+Disallow: /reset-password
+Disallow: /verify-email
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /

@@ -1,0 +1,4 @@
+ALTER TABLE public.bookings
+  ADD COLUMN coupon_code TEXT DEFAULT NULL,
+  ADD COLUMN discount_amount NUMERIC DEFAULT 0,
+  ADD COLUMN subtotal NUMERIC DEFAULT NULL;

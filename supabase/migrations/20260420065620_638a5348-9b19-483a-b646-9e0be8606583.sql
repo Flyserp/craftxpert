@@ -1,0 +1,2 @@
+DELETE FROM withdrawals WHERE vendor_id='0a41d6a2-6309-44df-b995-2091e16237af' AND status='pending' AND amount IN (15, 25);
+UPDATE wallets SET balance=0 WHERE user_id='0a41d6a2-6309-44df-b995-2091e16237af';
